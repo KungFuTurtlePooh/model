@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Imports tensorflow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+    
+    
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Classifier</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<!-- Body -->
+<body>
+    <h1>Tensorflow Image Classifier</h1>
+    <br>
+    <p>Welcome to my tensorflow image classification project. This project uses a combination of tensorflow js and tensorflow py.  This A.I. recognize 4 different anime characters: Lena(Anime: "86"), Miku Nakano(Anime: "The Quintessential Quintuplets"), Shinoa Hiiragi(Anime: "Seraph of the End"), and Tsukasa Tsukuyomi(Anime: "Tonikaku Kawaii").</p>
+    <br>
+    <h2>
+        <input type="file" id="img" name="img" accept="image/*">
+    </h2> 
+    <h3>This is how the A.I. sees your inputted image: </h3>
+    <h4>
+        <img id="previewImage" src="">
+    </h4>
+    <h5 id="results">
+        A.I. Prediction: 
+    </h5>
+    <button onclick="predict()">Predict</button>
+    <br>
+    <p>The reason why the image is distorted is because the A.I. was trained using 180x180 images. Thus, we need to alter the image size to fit the trained model's needs.</p>
+    <p>Note: The A.I. won't always get it right. I've trained the model using 1600 images(Which is considered a very small dataset) and it was my first time creating a neural network., meaning the A.I. isn't fully optimized for accuracy. As a result, the A.I. will have an 80% accuracy.</p>
+
+</body>
+
+
+<!-- Script -->
+    <script>
+        async function loadModel() {
+            model = undefined
+            model = await tf.loadLayersModel("https://raw.githubusercontent.com/KungFuTurtlePooh/model/main/model.json");
+            console.log("model loaded");
+        }
+        loadModel();
+
+        async function predict() {
+                let image = document.getElementById("previewImage")
+                let tensorImg = tf.browser.fromPixels(image).resizeNearestNeighbor([180, 180]).toFloat().expandDims();
+
+                prediction = await model.predict(tensorImg).data();
+
+                var characters = ["Lena", "Miku", "Shinoa", "Tsukasa"];
+                var max = prediction[0];
+                var index = 0;
+                for(var i = 0; i < 4; i++)
+                {
+                    if (prediction[i] > max)
+                    {
+                        max = prediction[i];
+                        index = i;
+                    }
+                }
+                predictedCharacter = characters[index];
+                document.getElementById("results").innerHTML = "A.I. Prediction: " + predictedCharacter;
+        }
+
+
+
+
+        // Event listener which sees if the img input is changed. If it is, then
+        // it creates an instance of FileReader() and uses that to save an inputted
+        // image to the local storage of the website. Then it sets the src of the 
+        // preview image to whatever image is saved on the local storage
+        document.querySelector("#img").addEventListener("change", function () {
+            const fileReader = new FileReader();
+
+            fileReader.addEventListener("load", () => {
+                localStorage.setItem("inputImage", fileReader.result);
+                const dataImage = localStorage.getItem("inputImage");
+                document.getElementById("previewImage").src=dataImage;
+            });
+
+            fileReader.readAsDataURL(this.files[0]);
+        })
+
+    </script>
+</html>
